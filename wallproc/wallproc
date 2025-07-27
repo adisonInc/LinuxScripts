@@ -1,0 +1,217 @@
+#!/bin/bash
+#!/bin/bash
+#
+# wallproc - Program do wyświetlania informacji o procesach systemu w formie tapety
+# 
+# Autor: Kamil Plakwicz
+# Wersja: 1.0
+# Data: 2025-06-12
+# Licencja: MIT
+#
+# Opis działania:
+# Skrypt wyświetla informacje o procesach systemu w formie graficznej, która może
+# być użyta jako tapeta systemowa. Wykorzystuje ImageMagick do generowania obrazu
+# i swww do zmiany tapety. Program działa w trybie automatycznego odświeżania,
+# odczytując konfigurację z pliku wallproc.rc.
+#
+# Komentarze w kodzie:
+# - #pobiera konfiguracje z pliku wallproc.rc
+# - # tworzy seed do zapisu obrazu w folderze tmp i go zapisuje
+# - # Funkcja do wypisania informacji w trybie cichym badz normalnym do terminala
+# - #zmienia rozmiar obrazu tla na podany w konfiguracji
+# - # tworzy tlo czarne na ktorym bazuje obraz
+# - # Funkcja do aktualizacji zawartości obrazu
+
+
+
+#pobiera konfiguracje z pliku chat.rc
+source ./wallproc.rc
+
+WIDTH=$(echo "$SIZE" | cut -d'x' -f1)
+HEIGHT=$(echo "$SIZE" | cut -d'x' -f2)
+FULLFONTPATH="${FONTSPATH}${FONT}"
+
+# Domyślne sortowanie, jeśli nie zdefiniowano w pliku rc
+SORTBY=${SORTBY:-"cpu"}
+
+# tworzy seed do zapisu obrazu w folderze tmp i go zapisuje 
+TMPSEED=$(date +%Y%m%d%H%M%S)
+TMPPATH="/tmp"
+TMPFILE="$TMPPATH/temp$TMPSEED.png"
+
+AUTOUPDATE=true
+
+SETBACKIMG=true
+
+# ========================
+# Funkcje pomocnicze
+# ========================
+
+parse_args() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -i)
+        BACKIMG=1
+        BACKIMGPATH="$2"
+        shift 2;;
+      -b)
+        SETBACKIMG=false
+        shift;;
+      -o) 
+        OUTPUTFLAG=true
+        OUTPUTIMGPATH="$2"
+        shift 2;;
+      -s)
+        SORTBY="$2"
+        shift 2;;
+      -h)
+        show_help; exit 0;;
+      -v)
+        echo -e "Werjsa 1.0 \nAutor: Kamil PLakwicz"; exit 0;;
+      *)
+        echo "Nieznana opcja: $1"; exit 1;;
+    esac
+  done
+}
+
+show_help() {
+  echo -e "Program do wyświetlania informacji o procesach systemu w formie tapety\n"
+  echo -e "Użycie: $0 [-b] [-o katalog_wyjściowy] [-i obraz] [-s cpu|mem|name] [-h] [-v]"
+  echo -e "\nDomyślnie program działa w trybie automatycznego odświeżania"
+  echo -e "\nArgumenty:"
+  echo -e "\t -b     Wyłącza ustawianie tapety"
+  echo -e "\t -i     Ustawia obraz bazowy tła"
+  echo -e "\t -o     Katalog wyjściowy dla zapisu obrazu"
+  echo -e "\t -s     Sortowanie procesów: cpu | mem | name"
+  echo -e "\t -v     Wyświetla wersję i informacje o autorze"
+  echo -e "\t -h     Wyświetla tę pomoc"
+}
+
+create_background() {
+  #zmienia rozmiar obrazu tla na podany w konfiguracji
+  if [[ $BACKIMG == 1 ]]; then
+    magick "$BACKIMGPATH" -resize "$SIZE" "$TMPFILE"
+  else
+    magick -size "$SIZE" xc:"black" "$TMPFILE"
+  fi
+}
+
+parse_args "$@"
+
+#Funkcja do wypisania informacji w trybie cichym badz normalnym do terminala
+
+silentprint() {
+  if [[ $SILENT == 0 ]]; then
+    if [[ $1 == 0 ]]; then
+      echo $2
+
+    else
+      echo -ne $2
+    fi
+  fi
+}
+
+create_background
+
+silentprint 0 "ROZMIAR -> $SIZE"
+silentprint 0 "OUTPUT -> $OUTPUT"
+silentprint 0 "TMP FILE -> $TMPFILE"
+
+LOOPCOUNT=0
+update() {
+  i=0
+  DRAW_CMDS=""
+
+  SORT_KEY=$(get_sort_key)
+  SORT_PREFIX="-"
+  [[ $SORTBY == "name" ]] && SORT_PREFIX=""  # sortowanie alfabetyczne rosnąco
+  CONTENT="$(ps -ax -o comm,%cpu,%mem --sort=${SORT_PREFIX}${SORT_KEY} --no-headers | head -n "$PSCOUNT")"
+  PSCOUNT=$(echo "$CONTENT" | wc -l)
+
+  FONTSIZE=$(($FONTSCALE * WIDTH / 1000))
+  LINE_HEIGHT=$((FONTSIZE + $LINEPADDING)) # odstęp między wierszami
+  AVAILABLE_HEIGHT=$((HEIGHT - PADDING_TOP - PADDING_BOTTOM))
+  LINES_PER_COLUMN=$((AVAILABLE_HEIGHT / LINE_HEIGHT))
+  # Ile kolumn potrzeba (zaokrąglenie w górę)
+  COLUMNSCOUNT=$(((PSCOUNT + LINES_PER_COLUMN - 1) / LINES_PER_COLUMN))
+
+  COLUMN_WIDTH=$((WIDTH / COLUMNSCOUNT))
+
+  X=$PADDING_LEFT
+  Y=$PADDING_TOP
+
+  while IFS= read -r LINE; do
+   
+    MEM=$(echo "$LINE" | awk '{print $NF}')
+    CPU=$(echo "$LINE" | awk '{print $(NF-1)}')
+    NAME=$(echo "$LINE" | sed -E "s/ $CPU $MEM$//")
+     if ((Y + LINE_HEIGHT > HEIGHT - PADDING_TOP)); then
+      Y=$PADDING_TOP
+      X=$((X + COLUMN_WIDTH))
+    fi
+    if [[ $TWOCOLOR == 1 ]]; then
+      if ((i % 2 == 0)); then
+        TEXTCOLOR=$TWOCOLORFIRST
+      else
+        TEXTCOLOR=$TWOCOLORSECOND
+      fi
+    fi
+    # Oblicz komponenty RGB jako fale sinusoidalne przesunięte w fazie
+    if [[ $RAINBOW == 1 ]]; then
+      R=$(awk -v i="$i" 'BEGIN { printf("%02X", (sin(i) * 127 + 128)) }')
+      G=$(awk -v i="$i" 'BEGIN { printf("%02X", (sin(i + 2) * 127 + 128)) }')
+      B=$(awk -v i="$i" 'BEGIN { printf("%02X", (sin(i + 4) * 127 + 128)) }')
+
+      HEX="#$R$G$B"
+      TEXTCOLOR=$HEX
+    fi
+    silentprint r "progress: $i / $PSCOUNT  \r"
+    if (($i >= $PSCOUNT - 1)); then
+      silentprint r "ukonczono obraz nr. $LOOPCOUNT \r"
+
+    fi
+
+    ((i++))
+    ESCAPED_NAME=$(echo "$NAME" | sed "s/'/\\\'/g") # escape apostrofów
+    #ESCAPED_CPU=$(echo "$CPU" | sed "s/'/\\\'/g")   # escape apostrofów
+    #ESCAPED_MEM=$(echo "$MEM" | sed "s/'/\\\'/g")   # escape apostrofów
+    DRAW_CMDS+="text $X,$Y '$ESCAPED_NAME' fill $TEXTCOLOR "
+     #DRAW_CMDS+="text $((X + 200)) ,$Y   '$ESCAPED_CPU' fill $TEXTCOLOR "
+     #DRAW_CMDS+="text $((X + 250)) ,$Y '$ESCAPED_MEM' fill $TEXTCOLOR "
+
+    Y=$((Y + LINE_HEIGHT))
+  done <<<"$CONTENT"
+
+  magick "$TMPFILE" -font "$FULLFONTPATH" -pointsize "$FONTSIZE" -fill "$TEXTCOLOR" \
+    -draw "$DRAW_CMDS" "$OUTPUT"
+
+  if [[ $OUTPUTFLAG == true ]]; then
+    silentprint r "zapisano obraz do $OUTPUTIMGPATH \r"
+     cp "$OUTPUT" "$OUTPUTIMGPATH"
+  fi
+
+  # nie ustawiaj tapety jesli ustawiona jest flaga
+  if [[ $SETBACKIMG == true ]]; then
+    swww img "$OUTPUT" --transition-type none --transition-duration 0
+  fi
+}
+
+get_sort_key() {
+  case "$SORTBY" in
+    cpu)  echo "%cpu";;
+    mem)  echo "%mem";;
+    name) echo "comm";;
+    *)    echo "%cpu";;
+  esac
+}
+
+  if [[ $AUTOUPDATE == true ]]; then
+    while true; do
+    update
+    ((LOOPCOUNT++))
+    sleep $UPDATETIME
+    done
+  fi
+
+
+rm "$TMPFILE"

@@ -1,0 +1,197 @@
+.TH WALLPROC 1 "Czerwiec 2025" "Wersja 1.0" "Polecenia użytkownika"
+
+.SH NAZWA
+wallproc \- program do wyświetlania informacji o procesach systemu w formie tapety
+
+.SH SKŁADNIA
+.B wallproc
+[
+.B \-b
+]
+[
+.BI \-i
+.I ścieżka_do_obrazu
+]
+[
+.BI \-o
+.I katalog_wyjściowy
+]
+[
+.BI \-s
+.I cpu|mem|name
+]
+[
+.B \-h
+]
+[
+.B \-v
+]
+
+.SH OPIS
+Wallproc to program do wyświetlania informacji o procesach systemu w formie graficznej, która może być użyta jako tapeta systemowa. Wykorzystuje ImageMagick do generowania obrazu i swww do zmiany tapety. Program działa w trybie automatycznego odświeżania, odczytując konfigurację z pliku wallproc.rc.
+
+.SH OPCJE
+.TP
+.B \-b
+Wyłącza ustawianie tapety.
+
+.TP
+.BI \-i
+.I ścieżka_do_obrazu
+Ustawia podany obraz jako tło bazowe.
+
+.TP
+.BI \-o
+.I katalog_wyjściowy
+Określa katalog, gdzie zostanie zapisany wynikowy obraz.
+
+.TP
+.BI \-s
+.I cpu|mem|name
+Ustawia kryterium sortowania procesów.
+
+.TP
+.B \-h
+Wyświetla tę pomoc.
+
+.TP
+.B \-v
+Wyświetla wersję programu i informacje o autorze.
+
+.SH KONFIGURACJA
+Program korzysta z pliku konfiguracyjnego
+.B wallproc.rc
+, który zawiera następujące opcje:
+
+.TP
+.B SIZE
+Rozdzielczość wyjściowego obrazu (np. "2560x1440").
+
+.TP
+.B BACKCOLOR
+Kolor tła w formacie hex (np. "#000000" dla czarnego).
+
+.TP
+.B BACKIMG
+Czy używać obrazu tła (1 = tak, 0 = nie).
+
+.TP
+.B BACKIMGPATH
+Ścieżka do obrazu tła.
+
+.TP
+.B FONTSPATH
+Ścieżka do folderu z czcionkami.
+
+.TP
+.B FONT
+Nazwa pliku czcionki (np. "FiraCode-Bold.ttf").
+
+.TP
+.B FONTSCALE
+Skala czcionki (wielkość).
+
+.TP
+.B PADDING_TOP
+Odstęp od góry.
+
+.TP
+.B PADDING_LEFT
+Odstęp od lewej krawędzi.
+
+.TP
+.B LINEPADDING
+Odstęp między liniami tekstu.
+
+.TP
+.B TEXTCOLOR
+Kolor tekstu.
+
+.TP
+.B TWOCOLOR
+Tryb dwóch kolorów (0 = wyłączony).
+
+.TP
+.B TWOCOLORFIRST
+Pierwszy kolor w trybie dwóch kolorów.
+
+.TP
+.B TWOCOLORSECOND
+Drugi kolor w trybie dwóch kolorów.
+
+.TP
+.B RAINBOW
+Tryb tęczowego tekstu (0 = wyłączony).
+
+.TP
+.B OUTPUT
+Nazwa pliku wynikowego.
+
+.TP
+.B PSCOUNT
+Liczba elementów do wyświetlenia.
+
+.TP
+.B UPDATETIME
+Częstotliwość odświeżania (w sekundach).
+
+.TP
+.B SILENT
+Tryb cichy (0 = pokazuj logi, 1 = cichy).
+
+.TP
+.B SORTBY
+Domyślne kryterium sortowania: cpu | mem | name.
+
+.TP
+.B AUTOUPDATE
+Tryb automatycznego odświeżania (true = włączone, false = wyłączone).
+
+.SH PRZYKŁADY
+.PP
+Podstawowe użycie:
+.BR wallproc
+
+.PP
+Użycie z podanym obrazem tła:
+.BR wallproc \-i /sciezka/do/obrazu.png
+
+.PP
+Użycie bez ustawiania tapety:
+.BR wallproc \-b
+
+.PP
+Użycie z zapisem do określonego katalogu:
+.BR wallproc \-o /sciezka/do/katalogu
+
+.PP
+Użycie w trybie cichym:
+.BR SILENT=1 ./wallproc
+
+.SH WYMAGANIA
+.TP
+.B ImageMagick
+Program do konwertowania obrazów.
+
+.TP
+.B swww
+Program do zmiany tapety.
+
+.TP
+.B Bash
+Interpreter skryptów.
+
+.TP
+.B Prawa do wykonania
+Plik
+.B wallproc
+musi mieć ustawione prawa do wykonania.
+
+.SH AUTOR
+Kamil Plakwicz
+
+.SH WERSJA
+1.0
+
+.SH LICENCJA
+MIT License

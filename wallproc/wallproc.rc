@@ -1,0 +1,40 @@
+# =========================
+# WYMIARY I TŁO
+# =========================
+SIZE="2560x1440"              # Rozdzielczość wyjściowego obrazu
+BACKCOLOR="#000000"           # Kolor tła (czarny)
+BACKIMG=0                     # Czy użyć obrazu tła (1 = tak, 0 = nie)
+BACKIMGPATH="./black.png"     # Ścieżka do obrazu tła
+
+# =========================
+# CZCIONKA I TEKST
+# =========================
+FONTSPATH="/usr/share/fonts/TTF/"    # Ścieżka do folderu z czcionkami
+FONT="FiraCode-Bold.ttf"             # Nazwa pliku czcionki
+FONTSCALE=6                          # Skala czcionki (wielkość)
+
+# =========================
+# WYŚWIETLANIE I POZYCJONOWANIE
+# =========================
+PADDING_TOP=200              # Odstęp od góry
+PADDING_LEFT=50              # Odstęp od lewej krawędzi
+LINEPADDING=10               # Odstęp między liniami tekstu
+
+# =========================
+# TRYBY KOLORÓW
+# =========================
+
+TEXTCOLOR="#880000"                      # Kolor tekstu
+TWOCOLOR=1                   # Tryb dwóch kolorów (0 = wyłączony)
+TWOCOLORFIRST="red"          # Pierwszy kolor w trybie dwóch kolorów
+TWOCOLORSECOND="magenta"     # Drugi kolor w trybie dwóch kolorów
+RAINBOW=0                   # Tryb tęczowego tekstu (0 = wyłączony)
+
+# =========================
+# WYJŚCIE I LOGIKA
+# =========================
+OUTPUT="output.png"          # Nazwa pliku wynikowego
+PSCOUNT=100                   # Liczba elementów do wyświetlenia (np. procesów?)
+SORTBY="cpu"                # Sortowanie procesów: cpu | mem | name
+UPDATETIME=2                 # Odświeżanie (np. co 2 sekundy)
+SILENT=0                     # Czy działać w trybie cichym (0 = pokaż logi)
